@@ -309,6 +309,21 @@ cd graph-neural-network-demo
 pip install -r requirements.txt
 ```
 
+3. Download the IEEE Fraud Detection dataset:
+```bash
+# Create data directory
+mkdir -p data
+
+# Download from Kaggle (requires Kaggle API setup)
+kaggle competitions download -c ieee-fraud-detection
+
+# Or download manually from:
+# https://www.kaggle.com/competitions/ieee-fraud-detection/data
+# Place train_transaction.csv and train_identity.csv in the data/ folder
+```
+
+**Note**: The `train_transaction.csv` file (652MB) is too large for GitHub and is excluded from version control. Download it from the Kaggle competition page.
+
 3. Initialize OpenTofu:
 ```bash
 tofu init

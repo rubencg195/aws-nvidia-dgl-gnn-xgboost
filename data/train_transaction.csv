@@ -1,18 +1,3 @@
-# IEEE Fraud Detection Dataset - train_transaction.csv
-#
-# This file (652MB) is too large for GitHub and must be downloaded separately.
-#
-# Download Instructions:
-# 1. Option A: Kaggle API
-#    kaggle competitions download -c ieee-fraud-detection
-#
-# 2. Option B: Manual Download
-#    Go to: https://www.kaggle.com/competitions/ieee-fraud-detection/data
-#    Download: train_transaction.csv
-#    Place in: data/train_transaction.csv
-#
-# The train_identity.csv file is included in the repository.
-#
-# For Git LFS support (if enabled in repository settings):
-# - git lfs pull  # to download LFS files
-# - git lfs fetch # to fetch LFS objects
+version https://git-lfs.github.com/spec/v1
+oid sha256:3a5c83ab6b3cc13dcabe5ffa9f522307fd5f7f7b6e6f6a60c32284ca6283d642
+size 683351067

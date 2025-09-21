@@ -313,10 +313,13 @@ pip install -r requirements.txt
 
 **Option A: Download from Git LFS (Recommended)**
 ```bash
-# Note: GitHub LFS must be enabled in repository settings for automatic download
-# If LFS is enabled, the files will be downloaded automatically when you clone
+# Git LFS is configured for large data files
+# Files will be downloaded automatically when you clone or pull
 git clone <repository-url>
 cd graph-neural-network-demo
+
+# If LFS files are not automatically downloaded:
+git lfs pull
 ```
 
 **Option B: Download from Kaggle (Alternative)**
@@ -334,7 +337,7 @@ kaggle competitions download -c ieee-fraud-detection
 
 **Note**: The `train_transaction.csv` file (652MB) is tracked with Git LFS. If downloading from Kaggle, ensure you have the complete dataset including both train_transaction.csv and train_identity.csv files.
 
-**GitHub LFS Setup**: To enable automatic download of LFS files, go to Repository Settings > Features and enable "Git LFS" in your GitHub repository.
+**Git LFS**: Large files are tracked with Git LFS and will be automatically downloaded when you clone the repository. No additional setup required!
 
 4. Initialize OpenTofu:
 ```bash

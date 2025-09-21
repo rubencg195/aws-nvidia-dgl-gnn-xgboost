@@ -36,9 +36,9 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# Data files (download from IEEE competition)
-data/train_transaction.csv
-data/test_*.csv
+# Data files (tracked with Git LFS)
+# data/train_transaction.csv (tracked with LFS)
+# data/test_*.csv
 
 # Python
 __pycache__/

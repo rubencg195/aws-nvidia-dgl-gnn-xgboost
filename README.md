@@ -310,6 +310,16 @@ pip install -r requirements.txt
 ```
 
 3. Download the IEEE Fraud Detection dataset:
+
+**Option A: Download from Git LFS (Recommended)**
+```bash
+# If you have Git LFS installed, the files will be downloaded automatically
+# when you clone or pull the repository
+git clone <repository-url>
+cd graph-neural-network-demo
+```
+
+**Option B: Download from Kaggle (Alternative)**
 ```bash
 # Create data directory
 mkdir -p data
@@ -322,9 +332,9 @@ kaggle competitions download -c ieee-fraud-detection
 # Place train_transaction.csv and train_identity.csv in the data/ folder
 ```
 
-**Note**: The `train_transaction.csv` file (652MB) is too large for GitHub and is excluded from version control. Download it from the Kaggle competition page.
+**Note**: The `train_transaction.csv` file (652MB) is tracked with Git LFS. If downloading from Kaggle, ensure you have the complete dataset including both train_transaction.csv and train_identity.csv files.
 
-3. Initialize OpenTofu:
+4. Initialize OpenTofu:
 ```bash
 tofu init
 ```

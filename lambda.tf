@@ -135,17 +135,17 @@ resource "aws_lambda_function" "deploy_sagemaker_job" {
 # Lambda invocation using aws_lambda_invocation resource
 resource "aws_lambda_invocation" "trigger_training_job" {
   function_name = aws_lambda_function.deploy_sagemaker_job.function_name
-  
+
   input = jsonencode({
     action    = "deploy_training_job"
     timestamp = timestamp()
   })
-  
+
   # Use async invocation type to avoid blocking
   lifecycle {
     ignore_changes = [input]
   }
-  
+
   depends_on = [
     aws_lambda_function.deploy_sagemaker_job,
     aws_s3_object.train_identity_data,

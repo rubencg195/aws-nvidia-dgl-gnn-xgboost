@@ -39,7 +39,7 @@ def lambda_handler(event, context):
         # Start pipeline execution (no parameters since pipeline uses static configuration)
         response = sagemaker.start_pipeline_execution(
             PipelineName=pipeline_name,
-            PipelineExecutionName=execution_name
+            PipelineExecutionDisplayName=execution_name
         )
 
         logger.info(f"Pipeline execution started successfully: {response['PipelineExecutionArn']}")

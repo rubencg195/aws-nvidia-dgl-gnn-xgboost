@@ -9,10 +9,5 @@ provider "aws" {
 
 # Local variables
 locals {
-  aws_region   = "us-east-1"
-  common_tags = {
-    Project     = "graph-neural-network-demo"
-    Environment = "dev"
-    ManagedBy   = "opentofu"
-  }
+  aws_region = "us-east-1"
 }

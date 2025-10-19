@@ -73,7 +73,10 @@ resource "aws_iam_role_policy" "sagemaker_pipeline" {
           "sagemaker:StopProcessingJob",
           "sagemaker:CreateTrainingJob",
           "sagemaker:DescribeTrainingJob",
-          "sagemaker:StopTrainingJob"
+          "sagemaker:StopTrainingJob",
+          "sagemaker:AddTags",
+          "sagemaker:ListTags",
+          "iam:PassRole"
         ]
         Effect   = "Allow"
         Resource = "*"
@@ -217,7 +220,7 @@ resource "aws_sagemaker_pipeline" "graph_neural_network" {
           }
           AppSpecification = {
             ImageUri = "683313688378.dkr.ecr.us-east-1.amazonaws.com/sagemaker-scikit-learn:1.2-1-cpu-py3"
-            ContainerEntrypoint = ["python3", "/opt/ml/processing/code/preprocessing.py"]
+            ContainerEntrypoint = ["bash", "-c", "aws s3 cp s3://${aws_s3_bucket.training_input.bucket}/code/preprocessing.py /opt/ml/processing/code/preprocessing.py && python3 /opt/ml/processing/code/preprocessing.py"]
           }
           Environment = {
             AWS_DEFAULT_REGION = "us-east-1"
@@ -303,6 +306,13 @@ resource "aws_sagemaker_pipeline" "graph_neural_network" {
 }
 
 # Create preprocessing script
+resource "aws_s3_object" "preprocessing_script" {
+  bucket = aws_s3_bucket.training_input.bucket
+  key    = "code/preprocessing.py"
+  source = "${path.module}/scripts/preprocessing/preprocessing.py"
+  etag   = filemd5("${path.module}/scripts/preprocessing/preprocessing.py")
+}
+
 resource "local_file" "preprocessing_script" {
   content = <<EOF
 #!/usr/bin/env python3

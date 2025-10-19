@@ -1,12 +1,11 @@
 # SageMaker Studio Domain and Admin User Configuration
 # This creates a SageMaker Studio domain and admin user for pipeline monitoring
 
-# Note: VPC configuration requires manual setup based on your AWS environment
-# You need to replace the placeholder VPC and subnet IDs with your actual values
+# VPC resources are now defined in vpc.tf
 
 # IAM Role for SageMaker Studio
 resource "aws_iam_role" "sagemaker_studio" {
-  name = "graph-neural-network-demo-sagemaker-studio"
+  name = local.sagemaker_studio_role_name
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -20,11 +19,7 @@ resource "aws_iam_role" "sagemaker_studio" {
     ]
   })
 
-  tags = {
-    Environment = "dev"
-    ManagedBy   = "opentofu"
-    Project     = "graph-neural-network-demo"
-  }
+  tags = local.common_tags
 }
 
 # Attach SageMaker Full Access Policy
@@ -35,7 +30,7 @@ resource "aws_iam_role_policy_attachment" "sagemaker_studio_full_access" {
 
 # Attach SageMaker Admin Policy (custom policy for full admin access)
 resource "aws_iam_role_policy" "sagemaker_studio_admin" {
-  name = "graph-neural-network-demo-sagemaker-admin-policy"
+  name = local.sagemaker_admin_policy_name
   role = aws_iam_role.sagemaker_studio.id
 
   policy = jsonencode({
@@ -60,34 +55,33 @@ resource "aws_iam_role_policy" "sagemaker_studio_admin" {
 
 # SageMaker Studio Domain
 resource "aws_sagemaker_domain" "graph_neural_network" {
-  domain_name = "graph-neural-network-demo-domain"
+  domain_name = local.sagemaker_domain_name
   auth_mode   = "IAM"
-  # VPC configuration - REQUIRED for SageMaker Studio
-  # Replace these with your actual VPC and subnet IDs
-  vpc_id     = "vpc-12345678"  # TODO: Replace with your VPC ID
-  subnet_ids = ["subnet-12345678", "subnet-87654321"]  # TODO: Replace with your subnet IDs
+  # VPC configuration - using the created VPC and subnets
+  vpc_id     = aws_vpc.sagemaker_studio.id
+  subnet_ids = aws_subnet.sagemaker_studio[*].id
 
   default_user_settings {
     execution_role = aws_iam_role.sagemaker_studio.arn
 
-    security_groups = []
+    security_groups = [aws_security_group.sagemaker_studio.id]
 
     sharing_settings {
       notebook_output_option = "Allowed"
       s3_kms_key_id         = null
-      s3_output_path        = "s3://${aws_s3_bucket.training_output.bucket}/studio-output/"
+      s3_output_path        = local.s3_paths.studio_output
     }
 
     jupyter_server_app_settings {
       default_resource_spec {
-        instance_type = "system"
+        instance_type = local.sagemaker_instance_types.jupyter_server
         lifecycle_config_arn = null
       }
     }
 
     kernel_gateway_app_settings {
       default_resource_spec {
-        instance_type = "ml.t3.medium"
+        instance_type = local.sagemaker_instance_types.kernel_gateway
         lifecycle_config_arn = null
       }
     }
@@ -102,7 +96,7 @@ resource "aws_sagemaker_domain" "graph_neural_network" {
         status                               = "ENABLED"
       }
       workspace_settings {
-        s3_artifact_path = "s3://${aws_s3_bucket.training_output.bucket}/studio-workspace/"
+        s3_artifact_path = local.s3_paths.studio_workspace
         s3_kms_key_id    = null
       }
     }
@@ -112,31 +106,27 @@ resource "aws_sagemaker_domain" "graph_neural_network" {
     home_efs_file_system = "Delete"
   }
 
-  tags = {
-    Environment = "dev"
-    ManagedBy   = "opentofu"
-    Project     = "graph-neural-network-demo"
-  }
+  tags = local.common_tags
 }
 
 # SageMaker Studio User Profile for Admin
 resource "aws_sagemaker_user_profile" "admin" {
   domain_id         = aws_sagemaker_domain.graph_neural_network.id
-  user_profile_name = "admin"
+  user_profile_name = local.sagemaker_user_profile_name
 
   user_settings {
     execution_role = aws_iam_role.sagemaker_studio.arn
 
     jupyter_server_app_settings {
       default_resource_spec {
-        instance_type = "system"
+        instance_type = local.sagemaker_instance_types.jupyter_server
         lifecycle_config_arn = null
       }
     }
 
     kernel_gateway_app_settings {
       default_resource_spec {
-        instance_type = "ml.t3.medium"
+        instance_type = local.sagemaker_instance_types.kernel_gateway
         lifecycle_config_arn = null
       }
     }
@@ -151,7 +141,7 @@ resource "aws_sagemaker_user_profile" "admin" {
         status                               = "ENABLED"
       }
       workspace_settings {
-        s3_artifact_path = "s3://${aws_s3_bucket.training_output.bucket}/studio-workspace/admin"
+        s3_artifact_path = local.s3_paths.admin_workspace
         s3_kms_key_id    = null
       }
     }
@@ -159,16 +149,13 @@ resource "aws_sagemaker_user_profile" "admin" {
     sharing_settings {
       notebook_output_option = "Allowed"
       s3_kms_key_id         = null
-      s3_output_path        = "s3://${aws_s3_bucket.training_output.bucket}/studio-output/admin"
+      s3_output_path        = local.s3_paths.admin_output
     }
   }
 
-  tags = {
-    Environment = "dev"
-    ManagedBy   = "opentofu"
-    Project     = "graph-neural-network-demo"
-    User        = "admin"
-  }
+  tags = merge(local.common_tags, {
+    User = local.sagemaker_user_profile_name
+  })
 }
 
 # Outputs for Studio Access
@@ -179,12 +166,12 @@ output "sagemaker_studio_domain_id" {
 
 output "sagemaker_studio_domain_name" {
   description = "SageMaker Studio Domain Name"
-  value       = aws_sagemaker_domain.graph_neural_network.domain_name
+  value       = local.sagemaker_domain_name
 }
 
 output "sagemaker_studio_admin_profile_name" {
   description = "SageMaker Studio Admin User Profile Name"
-  value       = aws_sagemaker_user_profile.admin.user_profile_name
+  value       = local.sagemaker_user_profile_name
 }
 
 output "sagemaker_studio_admin_role_arn" {
@@ -200,8 +187,8 @@ output "sagemaker_studio_admin_instructions" {
 1. Open AWS Console: https://console.aws.amazon.com/sagemaker
 2. Go to "Studio" in the left navigation
 3. Click "Open Studio"
-4. Select domain: ${aws_sagemaker_domain.graph_neural_network.domain_name}
-5. Select user: ${aws_sagemaker_user_profile.admin.user_profile_name}
+4. Select domain: ${local.sagemaker_domain_name}
+5. Select user: ${local.sagemaker_user_profile_name}
 6. Click "Open Studio"
 
 📊 You can now:
@@ -213,9 +200,34 @@ output "sagemaker_studio_admin_instructions" {
 
 🔐 The admin user has full SageMaker permissions to manage and monitor all resources.
 
-🚨 IMPORTANT: Before deploying, update VPC configuration in studio.tf:
-   - Replace 'vpc-12345678' with your actual VPC ID
-   - Replace subnet IDs with your actual subnet IDs
+✅ VPC Configuration: Created dedicated VPC with subnets and security group
+EOF
+}
+
+# Debug outputs to see VPC information
+output "debug_vpc_info" {
+  description = "Debug information about VPC configuration"
+  value = <<EOF
+📋 VPC Configuration Debug Information:
+
+Created VPC ID: ${aws_vpc.sagemaker_studio.id}
+Created Subnets: ${join(", ", aws_subnet.sagemaker_studio[*].id)}
+Created Security Group: ${aws_security_group.sagemaker_studio.id}
+Internet Gateway: ${aws_internet_gateway.sagemaker_studio.id}
+Route Table: ${aws_route_table.sagemaker_studio.id}
+
+VPC Configuration Status:
+- VPC Created: ✅
+- Subnets Created: ✅ (${length(aws_subnet.sagemaker_studio)} subnets)
+- Security Group Created: ✅
+- Internet Gateway Created: ✅
+- Route Table Created: ✅
+
+Network Configuration:
+- VPC CIDR: ${local.vpc_cidr_block}
+- Subnet 1 CIDR: ${local.subnet_cidr_blocks[0]}
+- Subnet 2 CIDR: ${local.subnet_cidr_blocks[1]}
+- Internet Access: ✅ (via IGW)
 EOF
 }
 
@@ -228,11 +240,10 @@ output "sagemaker_studio_status" {
 ✅ Admin Policy: Attached
 ✅ Studio Domain: ${aws_sagemaker_domain.graph_neural_network.domain_name}
 ✅ User Profile: ${aws_sagemaker_user_profile.admin.user_profile_name}
-❌ VPC Config: Needs manual setup (see instructions above)
+✅ VPC Config: Created dedicated VPC with subnets and security group
 
 🔧 Next Steps:
-1. Configure VPC settings in studio.tf
-2. Run: tofu apply -auto-approve
-3. Access Studio via AWS Console
+1. Run: tofu apply -auto-approve
+2. Access Studio via AWS Console
 EOF
 }

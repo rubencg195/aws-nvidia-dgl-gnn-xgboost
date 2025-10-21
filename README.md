@@ -150,6 +150,108 @@ The training job will:
 - Train XGBoost on combined GNN embeddings + tabular features
 - Save model artifacts to S3
 
+## 🧩 Using the NVIDIA Container on SageMaker (ECR + entrypoint override)
+
+SageMaker cannot pull directly from NGC. We make the NVIDIA container work in AWS by:
+
+- Uploading the NVIDIA image to your private ECR using OpenTofu (`docker-upload.tf`):
+  - Logs in to NGC with `nvidia_credentials.json`
+  - Pulls `nvcr.io/nvidia/cugraph/financial-fraud-training:1.0.1`
+  - Tags and pushes it to `ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/financial-fraud-training:1.0.1`
+  - Skips the upload if the tag already exists
+
+- Overriding the container entrypoint in SageMaker Training Jobs to run a wrapper script instead of the default container entrypoint:
+  - `container_entry_point=["bash", "/opt/ml/input/data/scripts/wrapper.sh"]`
+
+This approach preserves the vendor container while giving us full control to prepare the environment and launch training in a SageMaker-friendly way.
+
+### 🔧 Wrapper entrypoint (what it does)
+The wrapper script (generated and uploaded from `notebooks/nvidia/training-job.ipynb`) runs inside the container and:
+- Verifies GPU availability (`nvidia-smi`, basic CUDA checks)
+- Fixes `pyg-lib` compatibility for the container’s Torch/CUDA version (uninstall + reinstall from `data.pyg.org`)
+- Sets `PYTHONPATH=/opt/nim` so we can import the NVIDIA training code
+- Warms up CUDA to initialize device/context
+- Reads `/opt/ml/input/data/config/config.json` (created from preprocessing outputs)
+- Launches a small Python driver that calls `validate_config_and_run_training` from NVIDIA’s package
+- Creates a training snapshot under `/opt/ml/model/training_snapshot` including:
+  - Config files used
+  - Input data channels copied from `/opt/ml/input/data/`
+  - Environment and system info (Python packages, GPU details)
+  - A code snapshot of the container training sources
+
+### 🧪 SageMaker Estimator and fit configuration (snapshot)
+Below is a minimal snapshot of how the estimator and inputs are configured (see `notebooks/nvidia/training-job.ipynb` for the full version):
+
+```python
+import os, boto3, sagemaker
+from sagemaker.estimator import Estimator
+from sagemaker.debugger import ProfilerConfig, FrameworkProfile, DetailedProfilingConfig
+
+session = sagemaker.Session()
+region = session.boto_region_name
+account_id = boto3.client('sts').get_caller_identity()['Account']
+
+ecr_image_name = "financial-fraud-training"
+ecr_image_tag = "1.0.1"
+image_uri = f"{account_id}.dkr.ecr.{region}.amazonaws.com/{ecr_image_name}:{ecr_image_tag}"
+
+bucket = f"sagemaker-{region}-{account_id}"
+S3_PREPROCESS_DATA_PATH = f"s3://{bucket}/processed/ieee-fraud-detection/"
+S3_OUTPUT_DATA_PATH = f"s3://{bucket}/output/ieee-fraud-detection/"
+
+# Load NGC key from repo root JSON (see README setup)
+import json
+with open('nvidia_credentials.json', 'r', encoding='utf-8') as f:
+    NGC_API_KEY = json.load(f)["ngc_api_key"]
+
+estimator = Estimator(
+    image_uri=image_uri,
+    role=sagemaker.get_execution_role(),
+    instance_count=1,
+    instance_type="ml.g5.xlarge",
+    volume_size=30,
+    max_run=86400,
+    base_job_name="fraud-detection-gnn",
+    output_path=S3_OUTPUT_DATA_PATH,
+    sagemaker_session=session,
+    container_entry_point=["bash", "/opt/ml/input/data/scripts/wrapper.sh"],
+    environment={
+        "NIM_DISABLE_MODEL_DOWNLOAD": "true",
+        "NGC_API_KEY": NGC_API_KEY,
+        "PYTHONUNBUFFERED": "1",
+    },
+    profiler_config=ProfilerConfig(
+        system_monitor_interval_millis=500,
+        framework_profile_params=FrameworkProfile(
+            detailed_profiling_config=DetailedProfilingConfig(start_step=0, num_steps=10)
+        ),
+    ),
+)
+
+inputs = {
+    "gnn": sagemaker.inputs.TrainingInput(
+        s3_data=os.path.join(S3_PREPROCESS_DATA_PATH, "gnn/train_gnn/"),
+        content_type="application/x-directory",
+        input_mode="File",
+    ),
+    "config": sagemaker.inputs.TrainingInput(
+        s3_data=os.path.join(S3_PREPROCESS_DATA_PATH, "config"),
+        content_type="application/x-directory",
+        input_mode="File",
+    ),
+    "scripts": sagemaker.inputs.TrainingInput(
+        s3_data=os.path.join(S3_PREPROCESS_DATA_PATH, "scripts/wrapper.sh"),
+        content_type="text/x-sh",
+        input_mode="File",
+    ),
+}
+
+from datetime import datetime
+job_name = f"fraud-detection-gnn-{datetime.now().strftime('%d-%b-%Y-%H-%M-%S')}"
+
+estimator.fit(inputs=inputs, job_name=job_name, logs=["All"], wait=True)
+```
+
 ## 📁 Project Structure
 
 ```

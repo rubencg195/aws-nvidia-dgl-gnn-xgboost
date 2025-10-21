@@ -255,7 +255,7 @@ estimator.fit(inputs=inputs, job_name=job_name, logs=["All"], wait=True)
 ## 📁 Project Structure
 
 ```
-dgl-gnn-xgboost-training-using-nvidia-and-aws/
+aws-nvidia-dgl-gnn-xgboost/
 ├── data/                           # Raw IEEE dataset (gitignored)
 │   ├── train_identity.csv
 │   └── train_transaction.csv

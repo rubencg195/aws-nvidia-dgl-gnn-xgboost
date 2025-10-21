@@ -1,9 +1,9 @@
-# Local values for the dgl-gnn-xgboost-training-using-nvidia-and-aws project
+# Local values for the aws-nvidia-dgl-gnn-xgboost project
 # This file contains all constants and configuration values
 
 locals {
   # Project configuration
-  project_name = "dgl-gnn-xgboost-training-using-nvidia-and-aws"
+  project_name = "aws-nvidia-dgl-gnn-xgboost"
   environment  = "dev"
   managed_by   = "opentofu"
 
@@ -13,7 +13,7 @@ locals {
   default_route     = "0.0.0.0/0"
 
   # SageMaker Studio configuration
-  sagemaker_domain_name = "dgl-gnn-xgboost-training-using-nvidia-and-aws-domain"
+  sagemaker_domain_name = "aws-nvidia-dgl-gnn-xgboost-domain"
   sagemaker_user_profile_name = "admin"
 
   # Instance types

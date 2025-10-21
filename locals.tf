@@ -1,9 +1,9 @@
-# Local values for the graph-neural-network-demo project
+# Local values for the dgl-gnn-xgboost-training-using-nvidia-and-aws project
 # This file contains all constants and configuration values
 
 locals {
   # Project configuration
-  project_name = "graph-neural-network-demo"
+  project_name = "dgl-gnn-xgboost-training-using-nvidia-and-aws"
   environment  = "dev"
   managed_by   = "opentofu"
 
@@ -13,7 +13,7 @@ locals {
   default_route     = "0.0.0.0/0"
 
   # SageMaker Studio configuration
-  sagemaker_domain_name = "graph-neural-network-demo-domain"
+  sagemaker_domain_name = "dgl-gnn-xgboost-training-using-nvidia-and-aws-domain"
   sagemaker_user_profile_name = "admin"
 
   # Instance types

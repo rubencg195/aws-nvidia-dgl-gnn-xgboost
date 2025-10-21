@@ -14,7 +14,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-PIPELINE_NAME="graph-neural-network-demo-pipeline"
+PIPELINE_NAME="dgl-gnn-xgboost-training-using-nvidia-and-aws-pipeline"
 MAX_ITERATIONS=5
 WAIT_SECONDS=120
 LAMBDA_RESPONSE_FILE="lambda_response.json"
@@ -164,8 +164,8 @@ analyze_step_failures() {
                     echo "3. ✅ Verify pipeline role has permission to pass execution role"
                     echo ""
                     echo -e "${BLUE}📋 Current Status:${NC}"
-                    echo "- Pipeline Role: arn:aws:iam::176843580427:role/graph-neural-network-demo-pipeline-role"
-                    echo "- Execution Role: arn:aws:iam::176843580427:role/graph-neural-network-demo-sagemaker-execution"
+                    echo "- Pipeline Role: arn:aws:iam::176843580427:role/dgl-gnn-xgboost-training-using-nvidia-and-aws-pipeline-role"
+                    echo "- Execution Role: arn:aws:iam::176843580427:role/dgl-gnn-xgboost-training-using-nvidia-and-aws-sagemaker-execution"
                     echo "- Required Permission: iam:PassRole"
                     echo ""
                 else
@@ -197,8 +197,8 @@ analyze_step_failures() {
                     echo "3. ✅ Verify pipeline role has permission to pass execution role"
                     echo ""
                     echo -e "${BLUE}📋 Current Status:${NC}"
-                    echo "- Pipeline Role: arn:aws:iam::176843580427:role/graph-neural-network-demo-pipeline-role"
-                    echo "- Execution Role: arn:aws:iam::176843580427:role/graph-neural-network-demo-sagemaker-execution"
+                    echo "- Pipeline Role: arn:aws:iam::176843580427:role/dgl-gnn-xgboost-training-using-nvidia-and-aws-pipeline-role"
+                    echo "- Execution Role: arn:aws:iam::176843580427:role/dgl-gnn-xgboost-training-using-nvidia-and-aws-sagemaker-execution"
                     echo "- Required Permission: iam:PassRole"
                     echo ""
                 elif echo "$main_failure_reason" | grep -i "AlgorithmError" >/dev/null 2>&1; then
@@ -343,7 +343,7 @@ analyze_step_failures() {
                     echo "• The script upload to S3 failed"
                     echo ""
                     echo -e "${BLUE}📋 Specific Checks:${NC}"
-                    echo "1. Verify script was uploaded to S3: s3://graph-neural-network-demo-training-input-us-east-1/code/preprocessing.py"
+                    echo "1. Verify script was uploaded to S3: s3://dgl-gnn-xgboost-training-using-nvidia-and-aws-training-input-us-east-1/code/preprocessing.py"
                     echo "2. Check processing job ContainerEntrypoint configuration"
                     echo "3. Verify S3 permissions for the execution role"
                     echo "4. Check if the script download command is working"
@@ -411,8 +411,8 @@ search_cloudwatch_logs() {
                         echo "3. ✅ Verify pipeline role has permission to pass execution role"
                         echo ""
                         echo -e "${BLUE}📋 Current Status:${NC}"
-                        echo "- Pipeline Role: arn:aws:iam::176843580427:role/graph-neural-network-demo-pipeline-role"
-                        echo "- Execution Role: arn:aws:iam::176843580427:role/graph-neural-network-demo-sagemaker-execution"
+                        echo "- Pipeline Role: arn:aws:iam::176843580427:role/dgl-gnn-xgboost-training-using-nvidia-and-aws-pipeline-role"
+                        echo "- Execution Role: arn:aws:iam::176843580427:role/dgl-gnn-xgboost-training-using-nvidia-and-aws-sagemaker-execution"
                         echo "- Required Permission: iam:PassRole"
                         echo ""
                     else
@@ -512,7 +512,7 @@ get_lambda_logs() {
     echo -e "${YELLOW}🔍 Searching for errors in Lambda logs...${NC}"
 
     # Get Lambda log group
-    LAMBDA_LOG_GROUP="/aws/lambda/graph-neural-network-demo-deploy-sagemaker-job"
+    LAMBDA_LOG_GROUP="/aws/lambda/dgl-gnn-xgboost-training-using-nvidia-and-aws-deploy-sagemaker-job"
 
     echo -e "${BLUE}📄 Log Group: $LAMBDA_LOG_GROUP${NC}"
     search_cloudwatch_logs "$LAMBDA_LOG_GROUP" "$ERROR_KEYWORDS"

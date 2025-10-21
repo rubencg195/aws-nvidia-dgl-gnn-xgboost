@@ -90,3 +90,6 @@ lambda/bedrock_invoke.zip
 *.tmp
 *.temp
 *.bak
+
+# NVIDIA credentials (do not commit)
+nvidia_credentials.json

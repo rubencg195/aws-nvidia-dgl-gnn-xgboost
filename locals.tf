@@ -40,6 +40,10 @@ locals {
     Project     = local.project_name
   }
 
+  ecr_repo_name          = "financial-fraud-training"
+  ecr_image_tag          = "1.0.1"
+  nvidia_image_full_name = "nvcr.io/nvidia/cugraph/${local.ecr_repo_name}:${local.ecr_image_tag}"
+
   # S3 paths
   s3_paths = {
     studio_output     = "s3://${aws_s3_bucket.training_output.bucket}/studio-output/"

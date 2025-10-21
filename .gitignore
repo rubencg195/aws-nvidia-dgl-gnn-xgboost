@@ -93,3 +93,6 @@ lambda/bedrock_invoke.zip
 
 # NVIDIA credentials (do not commit)
 nvidia_credentials.json
+
+# Remove legacy folder from tracking
+old/

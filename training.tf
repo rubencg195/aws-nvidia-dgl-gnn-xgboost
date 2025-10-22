@@ -98,8 +98,8 @@ CONFIG_GEN_S3_PATH="s3://$INPUT_BUCKET/code/training/generate_config.py"
 PREPROCESS_DATA_PATH="s3://$OUTPUT_BUCKET/processed/ieee-fraud-detection/"
 OUTPUT_DATA_PATH="s3://$OUTPUT_BUCKET/output/ieee-fraud-detection/"
 
-# Generate unique job name with timestamp
-TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+# Generate unique job name with timestamp (matching notebook format)
+TIMESTAMP=$(date +%d-%b-%Y-%H-%M-%S)
 JOB_NAME="fraud-detection-training-$TIMESTAMP"
 
 echo "=================================================="

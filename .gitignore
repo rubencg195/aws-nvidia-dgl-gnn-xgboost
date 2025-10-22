@@ -97,6 +97,9 @@ nvidia_credentials.json
 # Remove legacy folder from tracking
 old/fraud-detection-*.json
 
+# Generated training configuration
+scripts/training/config.json
+
 # Logs from preprocessing and terraform operations
 tofu-*.log
 preprocessing-*.log

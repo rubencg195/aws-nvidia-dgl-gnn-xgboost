@@ -157,14 +157,13 @@ sleep 10
 
 # Generate training configuration
 echo "📝 Generating training configuration..."
-CONFIG_DIR="./training_config_$$"
-mkdir -p "$CONFIG_DIR"
-python "${path.module}/scripts/training/generate_config.py" "$CONFIG_DIR/config.json"
-echo "✅ Configuration generated at $CONFIG_DIR/config.json"
+CONFIG_FILE="${path.module}/scripts/training/config.json"
+python "${path.module}/scripts/training/generate_config.py" "$CONFIG_FILE"
+echo "✅ Configuration generated at $CONFIG_FILE"
 
 # Upload config to S3
 echo "📤 Uploading configuration to S3..."
-aws s3 cp "$CONFIG_DIR/config.json" "s3://$OUTPUT_BUCKET/processed/ieee-fraud-detection/config/config.json"
+aws s3 cp "$CONFIG_FILE" "s3://$OUTPUT_BUCKET/processed/ieee-fraud-detection/config/config.json"
 
 # Create SageMaker training job request
 echo "🚀 Creating SageMaker Training Job..."
@@ -256,7 +255,6 @@ if [ $CREATE_EXIT_CODE -ne 0 ]; then
   echo "❌ Failed to create training job!"
   echo "$CREATE_OUTPUT"
   rm -f "$REQ_FILE"
-  rm -rf "$CONFIG_DIR"
   exit 1
 fi
 
@@ -275,7 +273,6 @@ while true; do
     echo "❌ Timeout: Job did not appear in SageMaker within 3 minutes"
     echo "Job name: $JOB_NAME"
     rm -f "$REQ_FILE"
-    rm -rf "$CONFIG_DIR"
     exit 1
   fi
   
@@ -294,7 +291,6 @@ done
 if [ "$JOB_FOUND" = false ]; then
   echo "❌ Job was not found after creation"
   rm -f "$REQ_FILE"
-  rm -rf "$CONFIG_DIR"
   exit 1
 fi
 
@@ -311,7 +307,6 @@ while true; do
   if [ "$STATUS" = "ERROR" ]; then
     echo "❌ Error querying job status"
     rm -f "$REQ_FILE"
-    rm -rf "$CONFIG_DIR"
     exit 1
   fi
   
@@ -328,12 +323,10 @@ while true; do
     REASON=$(aws sagemaker describe-training-job --region "$REGION" --training-job-name "$JOB_NAME" --query 'FailureReason' --output text)
     echo "❌ Training job failed: $REASON"
     rm -f "$REQ_FILE"
-    rm -rf "$CONFIG_DIR"
     exit 1
   elif [ "$STATUS" = "Stopped" ]; then
     echo "⚠️  Training job was stopped"
     rm -f "$REQ_FILE"
-    rm -rf "$CONFIG_DIR"
     exit 1
   fi
   
@@ -374,7 +367,6 @@ if [ "$VERIFICATION_FAILED" = true ]; then
   echo "Some expected files are missing."
   echo "=================================================="
   rm -f "$REQ_FILE"
-  rm -rf "$CONFIG_DIR"
   exit 1
 fi
 
@@ -391,7 +383,6 @@ echo "    - training_snapshot/ (comprehensive training metadata)"
 
 # Cleanup
 rm -f "$REQ_FILE"
-rm -rf "$CONFIG_DIR"
 EOT
   }
 }

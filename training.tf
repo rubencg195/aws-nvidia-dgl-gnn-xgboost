@@ -373,7 +373,7 @@ fi
 echo "=================================================="
 echo "✅ All training outputs verified successfully!"
 echo "=================================================="
-echo "Output location: \${OUTPUT_DATA_PATH}\${JOB_NAME}/"
+echo "Output location: $${OUTPUT_DATA_PATH}$${JOB_NAME}/"
 echo ""
 echo "Generated model artifacts:"
 echo "  - model.tar.gz (257 MB) - Contains:"

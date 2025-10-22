@@ -126,14 +126,30 @@ This will:
 - Pull the 33GB NVIDIA container from NGC (first run only)
 - Push to your ECR registry
 
-#### 3. Prepare Data
-Follow the preprocessing notebook to:
-1. Upload IEEE dataset to S3
-2. Run preprocessing to create graph structure
-3. Upload processed data to S3
+#### 3. Run Preprocessing Job (Automated via OpenTofu)
+
+The preprocessing infrastructure is fully automated using OpenTofu. The `preprocessing.tf` file will:
+- Create IAM roles with necessary permissions
+- Upload the preprocessing script to S3
+- Check if preprocessed data already exists (skip if present)
+- Launch a SageMaker Processing Job on `ml.m5.4xlarge`
+- Monitor job completion (10-20 minutes)
+- Verify all output files are created correctly
 
 ```bash
-# Run preprocessing notebook or script
+# The preprocessing job is automatically triggered during tofu apply
+# It will skip if preprocessed data already exists in S3
+tofu apply -auto-approve
+```
+
+**⚠️ Status**: The preprocessing job deployment is implemented and creates jobs successfully. However, full end-to-end validation is pending to ensure:
+- The processing job completes without errors
+- All expected output files (graph edges, nodes, features, labels, XGBoost data) are created correctly in S3
+- The data format matches the structure expected by the NVIDIA training container
+
+**Manual preprocessing alternative** (for debugging):
+```bash
+# If needed, you can still run the preprocessing notebook manually
 jupyter notebook notebooks/nvidia/preprocessing.ipynb
 ```
 
@@ -260,13 +276,16 @@ aws-nvidia-dgl-gnn-xgboost/
 │   ├── train_identity.csv
 │   └── train_transaction.csv
 ├── docker-upload.tf                # OpenTofu config for NVIDIA container
+├── preprocessing.tf                # SageMaker preprocessing job automation
 ├── nvidia_credentials.json         # NGC API key (gitignored)
 ├── notebooks/
 │   └── nvidia/
-│       ├── preprocessing.ipynb     # Data preprocessing for GNN + XGBoost
+│       ├── preprocessing.ipynb     # Manual preprocessing (for debugging)
 │       ├── download-upload-ecr.ipynb  # Container management notebook
 │       └── training-job.ipynb      # SageMaker training job launcher
 ├── scripts/
+│   ├── preprocessing/
+│   │   └── preprocess.py           # Preprocessing script for SageMaker
 │   └── training/
 │       └── train.py                # Custom training script (if needed)
 ├── provider.tf                     # AWS provider configuration
@@ -281,10 +300,13 @@ aws-nvidia-dgl-gnn-xgboost/
 - **ECR Repository**: Stores NVIDIA training container
 - **S3 Buckets**: Data storage and model artifacts
 - **VPC**: Network isolation for SageMaker jobs
-- **IAM Roles**: SageMaker execution permissions
+- **IAM Roles**: SageMaker execution permissions for processing and training
+- **Processing Jobs**: Automated data preprocessing infrastructure
 
 ### Key Files
 - `docker-upload.tf`: Automates container pull/push from NGC to ECR
+- `preprocessing.tf`: Automated SageMaker preprocessing job deployment with monitoring
+- `scripts/preprocessing/preprocess.py`: Data preprocessing script for graph creation
 - `nvidia_credentials.json`: Secure storage for NGC API key (in .gitignore)
 - `locals.tf`: Common tags and configuration variables
 

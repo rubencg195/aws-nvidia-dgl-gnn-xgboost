@@ -95,4 +95,4 @@ lambda/bedrock_invoke.zip
 nvidia_credentials.json
 
 # Remove legacy folder from tracking
-old/
+old/fraud-detection-*.json

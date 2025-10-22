@@ -1,0 +1,67 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600">
+  <!-- Background -->
+  <rect width="1000" height="600" fill="#f5f5f5"/>
+  
+  <!-- Header -->
+  <rect width="1000" height="60" fill="#232f3e"/>
+  <text x="20" y="40" font-size="24" font-weight="bold" fill="white">AWS ECR - Container Registry</text>
+  
+  <!-- Breadcrumb -->
+  <rect y="60" width="1000" height="40" fill="#e8f4f8"/>
+  <text x="20" y="85" font-size="13" fill="#0073bb">📦 Repository: financial-fraud-training</text>
+  
+  <!-- Repository Info -->
+  <rect x="20" y="110" width="450" height="470" fill="white" stroke="#ddd" stroke-width="1"/>
+  <text x="30" y="135" font-size="13" font-weight="bold" fill="#232f3e">Repository Details</text>
+  
+  <text x="30" y="165" font-size="11" fill="#666">Repository URI:</text>
+  <text x="30" y="185" font-size="10" fill="#0073bb" font-family="monospace">ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/</text>
+  <text x="30" y="200" font-size="10" fill="#0073bb" font-family="monospace">financial-fraud-training:1.0.1</text>
+  
+  <text x="30" y="230" font-size="11" fill="#666">Created:</text>
+  <text x="30" y="250" font-size="11" fill="#232f3e">2025-10-22</text>
+  
+  <text x="30" y="280" font-size="11" fill="#666">Size:</text>
+  <text x="30" y="300" font-size="11" fill="#232f3e" font-weight="bold">33 GB</text>
+  
+  <text x="30" y="330" font-size="11" fill="#666">Image Tag:</text>
+  <text x="30" y="350" font-size="11" fill="#232f3e" font-weight="bold">1.0.1</text>
+  
+  <text x="30" y="380" font-size="11" fill="#666">Source (NGC):</text>
+  <text x="30" y="400" font-size="10" fill="#0073bb" font-family="monospace">nvcr.io/nvidia/cugraph/</text>
+  <text x="30" y="418" font-size="10" fill="#0073bb" font-family="monospace">financial-fraud-training:1.0.1</text>
+  
+  <text x="30" y="450" font-size="11" fill="#666">Encryption:</text>
+  <text x="30" y="470" font-size="11" fill="#232f3e">AES256</text>
+  
+  <!-- Image Details -->
+  <rect x="490" y="110" width="490" height="470" fill="white" stroke="#ddd" stroke-width="1"/>
+  <text x="500" y="135" font-size="13" font-weight="bold" fill="#232f3e">Image Configuration</text>
+  
+  <text x="500" y="165" font-size="11" font-weight="bold" fill="#232f3e">Base Image:</text>
+  <text x="510" y="185" font-size="10" fill="#666">NVIDIA CUDA 11.8 Base</text>
+  
+  <text x="500" y="215" font-size="11" font-weight="bold" fill="#232f3e">Installed Libraries:</text>
+  <text x="510" y="235" font-size="10" fill="#666">• NVIDIA cuGraph (GPU acceleration)</text>
+  <text x="510" y="252" font-size="10" fill="#666">• DGL (Deep Graph Library)</text>
+  <text x="510" y="269" font-size="10" fill="#666">• PyTorch 2.0+ (GPU)</text>
+  <text x="510" y="286" font-size="10" fill="#666">• XGBoost (GPU-accelerated)</text>
+  <text x="510" y="303" font-size="10" fill="#666">• RAPIDS (GPU data processing)</text>
+  <text x="510" y="320" font-size="10" fill="#666">• Python 3.10+</text>
+  
+  <text x="500" y="350" font-size="11" font-weight="bold" fill="#232f3e">Entrypoint Override (SageMaker):</text>
+  <rect x="510" y="360" width="460" height="50" fill="#f9f9f9" stroke="#e0e0e0" stroke-width="1" rx="2"/>
+  <text x="520" y="377" font-size="9" fill="#666" font-family="monospace">["bash", "/opt/ml/input/data/</text>
+  <text x="520" y="395" font-size="9" fill="#666" font-family="monospace">scripts/wrapper.sh"]</text>
+  
+  <text x="500" y="425" font-size="11" font-weight="bold" fill="#232f3e">Environment Variables:</text>
+  <text x="510" y="445" font-size="10" fill="#666">• NIM_DISABLE_MODEL_DOWNLOAD=true</text>
+  <text x="510" y="462" font-size="10" fill="#666">• NGC_API_KEY=[from credentials]</text>
+  <text x="510" y="479" font-size="10" fill="#666">• PYTHONUNBUFFERED=1</text>
+  <text x="510" y="496" font-size="10" fill="#666">• PYTHONPATH=/opt/nim</text>
+  
+  <text x="500" y="525" font-size="11" font-weight="bold" fill="#232f3e">GPU Support:</text>
+  <text x="510" y="545" font-size="10" fill="#666">✓ NVIDIA A10G (24GB recommended)</text>
+  <text x="510" y="562" font-size="10" fill="#666">✓ ML.g5.xlarge instance type</text>
+</svg>

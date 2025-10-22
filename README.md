@@ -17,6 +17,26 @@ This project demonstrates a production-ready pipeline that:
 - **AWS SageMaker**: Managed ML platform for training and deployment
 - **OpenTofu**: Infrastructure as code for reproducible deployments
 
+## 📸 Pipeline Snapshots
+
+Visual demonstrations of the key pipeline stages:
+
+### ECR Container Management
+NVIDIA GPU-optimized container deployed to AWS ECR for SageMaker execution.
+
+![ECR Container Registry](./images/ecr-container.svg)
+
+
+### Data Preprocessing Stage
+Automated SageMaker Processing Job that transforms raw data into GNN-ready graph format.
+
+![Data Preprocessing Job](./images/preprocessing-job.svg)
+
+### Model Training Stage
+GPU-accelerated training using NVIDIA A10G with real-time metrics and loss tracking.
+
+![Training Job Dashboard](./images/training-job.svg)
+
 ## 📊 Dataset
 
 The project uses the **IEEE-CIS Fraud Detection** dataset, which includes:

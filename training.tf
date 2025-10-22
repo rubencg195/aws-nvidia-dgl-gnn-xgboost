@@ -1,6 +1,12 @@
 # SageMaker Training Job Infrastructure using OpenTofu
 # Automates deployment of GraphSAGE + XGBoost model training on AWS SageMaker
 
+# Load NGC credentials from JSON file
+locals {
+  nvidia_credentials = try(jsondecode(file("${path.module}/nvidia_credentials.json")), { ngc_api_key = "" })
+  ngc_api_key        = local.nvidia_credentials.ngc_api_key
+}
+
 resource "aws_iam_role" "sagemaker_training" {
   name = "${local.project_name}-sagemaker-training-role"
   
@@ -86,6 +92,7 @@ ROLE_ARN="${aws_iam_role.sagemaker_training.arn}"
 INPUT_BUCKET="${aws_s3_bucket.training_input.bucket}"
 OUTPUT_BUCKET="${aws_s3_bucket.training_output.bucket}"
 ECR_IMAGE_URI="${aws_ecr_repository.financial_fraud_training.repository_url}:1.0.1"
+NGC_API_KEY="${local.ngc_api_key}"
 WRAPPER_S3_PATH="s3://$INPUT_BUCKET/code/training/wrapper.sh"
 CONFIG_GEN_S3_PATH="s3://$INPUT_BUCKET/code/training/generate_config.py"
 PREPROCESS_DATA_PATH="s3://$INPUT_BUCKET/processed/ieee-fraud-detection/"
@@ -216,7 +223,7 @@ cat > "$REQ_FILE" <<JSON
   },
   "Environment": {
     "NIM_DISABLE_MODEL_DOWNLOAD": "true",
-    "NGC_API_KEY": "${var.ngc_api_key}",
+    "NGC_API_KEY": "$NGC_API_KEY",
     "PYTHONUNBUFFERED": "1"
   },
   "ContainerEntrypoint": [
@@ -351,7 +358,8 @@ for file in "$${EXPECTED_FILES[@]}"; do
     VERIFICATION_FAILED=true
   else
     SIZE=$(aws s3 ls "$FULL_PATH" | awk '{print $3}')
-    echo "  ✅ Verified: $file (size: $SIZE bytes, $(echo "scale=2; $SIZE / 1000000" | bc) MB)"
+    SIZE_MB=$(echo "scale=2; $SIZE / 1000000" | bc)
+    echo "  ✅ Verified: $file (size: $SIZE bytes, $SIZE_MB MB)"
   fi
 done
 

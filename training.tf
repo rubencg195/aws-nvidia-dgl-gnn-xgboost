@@ -167,7 +167,7 @@ aws s3 cp "$CONFIG_FILE" "s3://$OUTPUT_BUCKET/processed/ieee-fraud-detection/con
 
 # Create SageMaker training job request
 echo "🚀 Creating SageMaker Training Job..."
-REQ_FILE="./training-job-$JOB_NAME.json"
+REQ_FILE="./training-job-$JOB_NAME.log"
 
 cat > "$REQ_FILE" <<JSON
 {

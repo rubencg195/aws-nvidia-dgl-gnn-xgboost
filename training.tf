@@ -95,7 +95,7 @@ ECR_IMAGE_URI="${aws_ecr_repository.financial_fraud_training.repository_url}:1.0
 NGC_API_KEY="${local.ngc_api_key}"
 WRAPPER_S3_PATH="s3://$INPUT_BUCKET/code/training/wrapper.sh"
 CONFIG_GEN_S3_PATH="s3://$INPUT_BUCKET/code/training/generate_config.py"
-PREPROCESS_DATA_PATH="s3://$INPUT_BUCKET/processed/ieee-fraud-detection/"
+PREPROCESS_DATA_PATH="s3://$OUTPUT_BUCKET/processed/ieee-fraud-detection/"
 OUTPUT_DATA_PATH="s3://$OUTPUT_BUCKET/output/ieee-fraud-detection/"
 
 # Generate unique job name with timestamp
@@ -159,12 +159,12 @@ sleep 10
 echo "📝 Generating training configuration..."
 CONFIG_DIR="./training_config_$$"
 mkdir -p "$CONFIG_DIR"
-python3 "${path.module}/scripts/training/generate_config.py" "$CONFIG_DIR/config.json"
+python "${path.module}/scripts/training/generate_config.py" "$CONFIG_DIR/config.json"
 echo "✅ Configuration generated at $CONFIG_DIR/config.json"
 
 # Upload config to S3
 echo "📤 Uploading configuration to S3..."
-aws s3 cp "$CONFIG_DIR/config.json" "s3://$INPUT_BUCKET/processed/ieee-fraud-detection/config/config.json"
+aws s3 cp "$CONFIG_DIR/config.json" "s3://$OUTPUT_BUCKET/processed/ieee-fraud-detection/config/config.json"
 
 # Create SageMaker training job request
 echo "🚀 Creating SageMaker Training Job..."
@@ -176,14 +176,18 @@ cat > "$REQ_FILE" <<JSON
   "RoleArn": "$ROLE_ARN",
   "AlgorithmSpecification": {
     "TrainingImage": "$ECR_IMAGE_URI",
-    "TrainingInputMode": "File"
+    "TrainingInputMode": "File",
+    "ContainerEntrypoint": [
+      "bash",
+      "/opt/ml/input/data/scripts/wrapper.sh"
+    ]
   },
   "InputDataConfig": [
     {
       "ChannelName": "gnn",
       "DataSource": {
         "S3DataSource": {
-          "S3Uri": "$PREPROCESS_DATA_PATH/gnn/train_gnn/",
+          "S3Uri": "$${PREPROCESS_DATA_PATH}gnn/train_gnn/",
           "S3DataType": "S3Prefix",
           "S3DataDistributionType": "FullyReplicated"
         }
@@ -193,7 +197,7 @@ cat > "$REQ_FILE" <<JSON
       "ChannelName": "config",
       "DataSource": {
         "S3DataSource": {
-          "S3Uri": "s3://$INPUT_BUCKET/processed/ieee-fraud-detection/config/",
+          "S3Uri": "s3://$OUTPUT_BUCKET/processed/ieee-fraud-detection/config/",
           "S3DataType": "S3Prefix",
           "S3DataDistributionType": "FullyReplicated"
         }
@@ -204,7 +208,7 @@ cat > "$REQ_FILE" <<JSON
       "DataSource": {
         "S3DataSource": {
           "S3Uri": "$WRAPPER_S3_PATH",
-          "S3DataType": "S3Object",
+          "S3DataType": "S3Prefix",
           "S3DataDistributionType": "FullyReplicated"
         }
       }
@@ -226,10 +230,6 @@ cat > "$REQ_FILE" <<JSON
     "NGC_API_KEY": "$NGC_API_KEY",
     "PYTHONUNBUFFERED": "1"
   },
-  "ContainerEntrypoint": [
-    "bash",
-    "/opt/ml/input/data/scripts/wrapper.sh"
-  ],
   "Tags": [
     {
       "Key": "Project",

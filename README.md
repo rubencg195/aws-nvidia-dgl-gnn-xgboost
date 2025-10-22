@@ -185,6 +185,39 @@ The complete pipeline has been tested with full data deletion and recreation:
 - [x] Automatic output verification
 - [x] Idempotency (multiple runs don't create duplicate jobs)
 
+#### Idempotency Validation (Confirmed)
+
+**Test Objective**: Verify that running `tofu apply -auto-approve` when preprocessed data already exists in S3 does NOT trigger the preprocessing job again.
+
+**Test Results:**
+- ✅ Re-ran `tofu apply -auto-approve` with existing S3 data
+- ✅ OpenTofu Output: "No changes. Your infrastructure matches the configuration."
+- ✅ Resources created: **0** | Resources changed: **0** | Resources destroyed: **0**
+- ✅ Preprocessing job: **NOT triggered** (correctly skipped)
+- ✅ S3 data verification: All 11 preprocessed files remain intact
+- ✅ Cost optimization: No redundant job execution = no extra charges
+
+**Idempotency Mechanism (Two-Layer Protection):**
+
+1. **Terraform State Layer** (Primary):
+   - The `null_resource.run_preprocessing_job` uses triggers based on:
+     - Preprocessing script hash (`scripts/preprocessing/preprocess.py`)
+     - Input data hashes (`train_transaction.csv`, `train_identity.csv`)
+     - IAM role ARN
+   - When these hashes/values haven't changed, the resource is not replaced
+   - Therefore, the `local-exec` provisioner does NOT run
+
+2. **Local-Exec Layer** (Backup Safeguard):
+   - Even if the provisioner runs, the bash script includes a pre-check
+   - Checks if all required files exist in S3 before job creation
+   - If all files found → skips job creation and exits gracefully
+   - If any missing → proceeds with job creation
+
+**Cost Implications:**
+- Idempotency prevents unnecessary SageMaker Processing Job executions
+- No duplicate data generation or storage redundancy
+- Estimated savings: **$0.50-$1.00 per redundant run** on ml.m5.4xlarge instance
+
 #### Retrieving CloudWatch Logs
 
 A utility script is provided to inspect SageMaker Processing Job logs:

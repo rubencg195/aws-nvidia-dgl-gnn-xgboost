@@ -358,7 +358,7 @@ for file in "$${EXPECTED_FILES[@]}"; do
     VERIFICATION_FAILED=true
   else
     SIZE=$(aws s3 ls "$FULL_PATH" | awk '{print $3}')
-    SIZE_MB=$(echo "scale=2; $SIZE / 1000000" | bc)
+    SIZE_MB=$(awk "BEGIN {printf \"%.2f\", $SIZE / 1000000}")
     echo "  ✅ Verified: $file (size: $SIZE bytes, $SIZE_MB MB)"
   fi
 done

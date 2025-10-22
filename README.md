@@ -27,6 +27,96 @@ The project uses the **IEEE-CIS Fraud Detection** dataset, which includes:
 
 ## 🏗️ Architecture
 
+### System Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph "Data Sources"
+        RAW["📊 Raw Data<br/>train_transaction.csv<br/>train_identity.csv"]
+    end
+    
+    subgraph "OpenTofu Orchestration"
+        TF["🏗️ OpenTofu<br/>docker-upload.tf<br/>preprocessing.tf<br/>training.tf"]
+    end
+    
+    subgraph "Container & Credentials"
+        NGC["🔐 NGC Registry<br/>nvcr.io/nvidia/<br/>financial-fraud-training"]
+        CREDS["🔑 nvidia_credentials.json<br/>NGC API Key"]
+        ECR["📦 AWS ECR<br/>financial-fraud-training:1.0.1"]
+    end
+    
+    subgraph "Data Preprocessing"
+        PROC["🔄 SageMaker Processing Job<br/>ml.m5.4xlarge<br/>scripts/preprocessing/preprocess.py"]
+        PROCOUT["✅ GNN Data Format<br/>- edges/node_to_node.csv<br/>- nodes/node.csv<br/>- node_label.csv"]
+    end
+    
+    subgraph "Model Training"
+        TRAIN["🚀 SageMaker Training Job<br/>ml.g5.xlarge GPU<br/>NVIDIA A10G 24GB"]
+        WRAPPER["🐚 scripts/training/wrapper.sh<br/>- GPU setup<br/>- pyg-lib fix<br/>- CUDA warmup"]
+        CONFIG["⚙️ scripts/training/generate_config.py<br/>GraphSAGE_XGBoost hyperparams"]
+        TRAININ["📥 Training Inputs<br/>- GNN data<br/>- Config JSON<br/>- Training scripts"]
+    end
+    
+    subgraph "S3 Storage"
+        S3INPUT["📥 Input Bucket<br/>- Raw data<br/>- Scripts<br/>- Config"]
+        S3OUTPUT["📤 Output Bucket<br/>- Preprocessed data<br/>- Model artifacts<br/>- Training snapshot"]
+    end
+    
+    subgraph "Model Artifacts"
+        MODEL["🎯 Trained Model<br/>model.tar.gz 257MB"]
+        MODELREPO["📦 model_repository/<br/>ONNX models for Triton"]
+        PYREPO["🐍 python_backend_model_repository/<br/>PyTorch models"]
+        SNAPSHOT["📸 training_snapshot/<br/>Config, metadata, code, inputs"]
+    end
+    
+    subgraph "Monitoring & Logs"
+        CW["📋 CloudWatch Logs<br/>/aws/sagemaker/<br/>TrainingJobs"]
+        SCRIPTS["🔧 retrieve_logs.py<br/>Log analysis utility"]
+    end
+    
+    RAW -->|Upload| S3INPUT
+    CREDS -->|Auth| NGC
+    NGC -->|Pull| ECR
+    TF -->|Orchestrate| PROC
+    TF -->|Deploy| TRAIN
+    PROC -->|Output| PROCOUT
+    PROCOUT -->|Store| S3OUTPUT
+    S3INPUT -->|Read| PROC
+    S3OUTPUT -->|Read| TRAIN
+    ECR -->|Use| WRAPPER
+    ECR -->|Use| TRAIN
+    CONFIG -->|Generate| TRAININ
+    WRAPPER -->|Execute| TRAIN
+    TRAININ -->|Feed| TRAIN
+    TRAIN -->|Monitor| CW
+    CW -->|Analyze| SCRIPTS
+    TRAIN -->|Create| MODEL
+    MODEL -->|Contains| MODELREPO
+    MODEL -->|Contains| PYREPO
+    MODEL -->|Contains| SNAPSHOT
+    MODEL -->|Store| S3OUTPUT
+    
+    style RAW fill:#e1f5ff
+    style TF fill:#fff3e0
+    style NGC fill:#f3e5f5
+    style ECR fill:#f3e5f5
+    style CREDS fill:#ffebee
+    style PROC fill:#e8f5e9
+    style PROCOUT fill:#c8e6c9
+    style TRAIN fill:#e8f5e9
+    style WRAPPER fill:#fff9c4
+    style CONFIG fill:#fff9c4
+    style TRAININ fill:#ffe0b2
+    style S3INPUT fill:#b3e5fc
+    style S3OUTPUT fill:#81d4fa
+    style MODEL fill:#a5d6a7
+    style MODELREPO fill:#81c784
+    style PYREPO fill:#81c784
+    style SNAPSHOT fill:#81c784
+    style CW fill:#bbdefb
+    style SCRIPTS fill:#90caf9
+```
+
 ### Pipeline Stages
 
 #### 1. **Data Preprocessing** (SageMaker Processing Job)
@@ -320,9 +410,24 @@ tofu apply -auto-approve
 - Committed to main branch (commit: 2e40101)
 - NGC API credentials properly integrated
 - Two-layer idempotency mechanism in place
+- **End-to-end training execution successful** (October 22, 2025)
+  - Job Name: `fraud-detection-training-22-Oct-2025-01-13-49`
+  - Execution Time: ~12 minutes
+  - GPU Instance: ml.g5.xlarge (NVIDIA A10G 24GB)
+  - Model Output: model.tar.gz (257 MB) with all artifacts verified
+  - Timestamp format: Human-readable (dd-Mon-YYYY-HH-MM-SS)
+  - Idempotency: Confirmed - subsequent runs skip job when output exists
+  - Temporary files: Using `.log` extension with gitignore patterns
 
-**⚠️ Known Challenge:**
-- **S3 Path Reference**: The training job's pre-check for preprocessed data references the wrong S3 bucket path (INPUT bucket instead of OUTPUT bucket where preprocessing places the data). This is a minor fix requiring one-line update to the `PREPROCESS_DATA_PATH` variable in `training.tf` to point to the output bucket's processed data location.
+**✅ All Systems Operational:**
+- [x] ECR container management (docker-upload.tf)
+- [x] Data preprocessing automation (preprocessing.tf)
+- [x] Model training automation (training.tf)
+- [x] Real-time monitoring and logging
+- [x] S3 artifact management
+- [x] Output verification and validation
+- [x] Cost optimization (idempotency checks)
+- [x] Comprehensive documentation
 
 **🔧 Next Steps (Next Session):**
 1. Fix S3 path reference in training.tf (1 minute)

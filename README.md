@@ -143,14 +143,64 @@ tofu apply -auto-approve
 ```
 
 **✅ Status**: Preprocessing infrastructure fully validated and operational!
-- ✅ Successfully created SageMaker Processing Job
-- ✅ Job completed in 18 minutes 38 seconds
-- ✅ All 10 expected output files verified in S3:
-  - **GNN Train Data**: 2.4GB nodes + 26MB edges
-  - **GNN Test Data**: 1GB nodes + 10.8MB edges  
-  - **XGBoost Data**: 2.4GB training + 1GB test + feature info
-- ✅ Idempotency verified: Second `tofu apply` skips preprocessing when data exists
-- ✅ Output structure matches NVIDIA training container expectations
+
+#### End-to-End Validation Results (October 21, 2025)
+
+The complete pipeline has been tested with full data deletion and recreation:
+
+**Test Execution:**
+- ✅ Deleted all preprocessed data from S3
+- ✅ Tainted Terraform state to force resource recreation
+- ✅ Re-ran `tofu apply -auto-approve` from scratch
+- ✅ Job completed successfully in **16m18s**
+- ✅ All 10 output files verified with correct sizes
+
+**Preprocessing Job Details:**
+- Job Name: `fraud-detection-preprocessing-20251021-224642`
+- Instance Type: `ml.m5.4xlarge` with 30GB storage
+- Status: Completed at 2025-10-21 23:02:23 UTC
+- Total Data Generated: ~8.0 GB
+
+**Output Files Verified:**
+| File | Size |
+|------|------|
+| gnn/train_gnn/edges/node_to_node.csv | 26.1 MB |
+| gnn/train_gnn/nodes/node.csv | 2.42 GB |
+| gnn/train_gnn/nodes/node_label.csv | 827 KB |
+| gnn/train_gnn/nodes/offset_range_of_training_node.json | 37 B |
+| gnn/test/edges/node_to_node.csv | 10.8 MB |
+| gnn/test/nodes/node.csv | 1.04 GB |
+| gnn/test/nodes/node_label.csv | 354 KB |
+| xgb/training.csv | 2.42 GB |
+| xgb/test.csv | 1.04 GB |
+| xgb/feature_info.json | 9.6 KB |
+
+**Infrastructure Components Validated:**
+- [x] IAM roles and permissions
+- [x] S3 input/output buckets
+- [x] SageMaker Processing Job orchestration
+- [x] AWS CLI integration and error handling
+- [x] Pre-check logic (skips job if data exists)
+- [x] Job status monitoring with 3-minute timeout
+- [x] Automatic output verification
+- [x] Idempotency (multiple runs don't create duplicate jobs)
+
+#### Retrieving CloudWatch Logs
+
+A utility script is provided to inspect SageMaker Processing Job logs:
+
+```bash
+# Retrieve logs for latest preprocessing job
+python scripts/preprocessing/retrieve_logs.py
+
+# Retrieve logs for specific job
+python scripts/preprocessing/retrieve_logs.py fraud-detection-preprocessing-20251021-224642
+
+# Retrieve logs for specific region
+python scripts/preprocessing/retrieve_logs.py fraud-detection-preprocessing-20251021-224642 us-west-2
+```
+
+**Requirements:** `boto3` installed in Python environment
 
 **Manual preprocessing alternative** (for debugging):
 ```bash

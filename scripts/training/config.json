@@ -1,0 +1,29 @@
+{
+  "paths": {
+    "data_dir": "/opt/ml/input/data/gnn",
+    "output_dir": "/opt/ml/model"
+  },
+  "models": [
+    {
+      "kind": "GraphSAGE_XGBoost",
+      "gpu": "single",
+      "hyperparameters": {
+        "gnn": {
+          "hidden_channels": 32,
+          "n_hops": 2,
+          "dropout_prob": 0.2,
+          "batch_size": 1024,
+          "fan_out": 32,
+          "num_epochs": 20
+        },
+        "xgb": {
+          "max_depth": 8,
+          "learning_rate": 0.1,
+          "num_parallel_tree": 1,
+          "num_boost_round": 1000,
+          "gamma": 1.0
+        }
+      }
+    }
+  ]
+}

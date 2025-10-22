@@ -21,21 +21,17 @@ This project demonstrates a production-ready pipeline that:
 
 Visual demonstrations of the key pipeline stages:
 
-### ECR Container Management
-NVIDIA GPU-optimized container deployed to AWS ECR for SageMaker execution.
-
-![ECR Container Registry](./images/ecr-container.svg)
-
-
 ### Data Preprocessing Stage
 Automated SageMaker Processing Job that transforms raw data into GNN-ready graph format.
 
-![Data Preprocessing Job](./images/preprocessing-job.svg)
+![Data Preprocessing Job](./images/preprocessing-job.png)
 
 ### Model Training Stage
 GPU-accelerated training using NVIDIA A10G with real-time metrics and loss tracking.
 
-![Training Job Dashboard](./images/training-job.svg)
+![Training Job Dashboard](./images/training-job.png)
+
+![Training Job Usage](./images/training-job-usage.png)
 
 ## 📊 Dataset
 

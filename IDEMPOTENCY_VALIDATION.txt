@@ -1,0 +1,95 @@
+================================================================================
+IDEMPOTENCY VALIDATION REPORT
+================================================================================
+Date: October 21, 2025
+Status: ✅ PASSED
+
+================================================================================
+TEST SCENARIO
+================================================================================
+
+Objective: Verify that running `tofu apply -auto-approve` when preprocessed
+data already exists in S3 does NOT trigger the preprocessing job again.
+
+Test Steps:
+1. Preprocessed data exists in S3 (from previous successful run)
+2. Run `tofu apply -auto-approve`
+3. Verify:
+   - No new resources created
+   - No resources destroyed
+   - Preprocessing job NOT triggered
+   - Existing data remains in S3
+
+================================================================================
+RESULTS
+================================================================================
+
+OpenTofu Output:
+  - Resources created: 0
+  - Resources changed: 0
+  - Resources destroyed: 0
+  - Status: "No changes. Your infrastructure matches the configuration."
+
+S3 Data Verification:
+  - Total files in S3: 11 ✅
+  - All preprocessed files intact
+  - No duplicate data generated
+  - No additional storage consumed
+
+================================================================================
+IDEMPOTENCY MECHANISM
+================================================================================
+
+The idempotency is achieved through two layers:
+
+1. TERRAFORM STATE LAYER (Primary):
+   - The null_resource.run_preprocessing_job has triggers defined based on:
+     * preprocessing script hash (scripts/preprocessing/preprocess.py)
+     * input data hash (train_transaction.csv, train_identity.csv)
+     * IAM role ARN
+   - When these hashes/values haven't changed, the resource is not replaced
+   - Therefore, the local-exec provisioner does NOT run
+
+2. LOCAL-EXEC LAYER (Backup safeguard):
+   - Even if the provisioner runs, the bash script has a pre-check:
+   - It checks if all required files exist in S3
+   - If all files found → skips job creation and exits
+   - If any missing → proceeds with job creation
+
+================================================================================
+VERIFICATION COMMANDS
+================================================================================
+
+To verify idempotency yourself:
+
+1. Check S3 data exists:
+   aws s3 ls s3://aws-nvidia-dgl-gnn-xgboost-training-output-us-east-1/processed/ieee-fraud-detection/ --recursive
+
+2. Run apply with no state changes:
+   tofu apply -auto-approve
+
+3. Verify no jobs created:
+   aws sagemaker list-processing-jobs --query 'ProcessingJobSummaries[0].ProcessingJobName' --output text
+
+4. Verify data unchanged:
+   aws s3 ls s3://aws-nvidia-dgl-gnn-xgboost-training-output-us-east-1/processed/ieee-fraud-detection/ --recursive | wc -l
+
+================================================================================
+COST IMPLICATIONS
+================================================================================
+
+✅ Idempotency prevents unnecessary costs:
+- No redundant SageMaker Processing Job executions
+- No duplicate data generation and storage
+- Estimated savings: $0.50-$1.00 per redundant run on ml.m5.4xlarge
+
+================================================================================
+CONCLUSION
+================================================================================
+
+✅ The preprocessing infrastructure is fully idempotent:
+   - First run: Triggers preprocessing job, generates data
+   - Subsequent runs: Skips job if data exists, no cost incurred
+   - Ready for production use with automatic cost optimization
+
+================================================================================
